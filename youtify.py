@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 
 spotify_list = list()
 youtube_links = list()
+errors = list()
+player = None
 
 if len(sys.argv) == 2:
     with open(sys.argv[1], 'r') as inputf:
@@ -46,13 +48,17 @@ for slink in spotify_list:
                     ytl.append(video)
         
         for video in ytl:
-            ans = ''
-            while ans != 'y' and  ans != 'n':
-                ans = input('\nYT title: {}\n\t->Do you wish to preview it? [y/n] > '.format(video['title'], video['link']))
-                ans = ans.lower()
+            if player:
+                ans = ''
+                while ans != 'y' and  ans != 'n':
+                    ans = input('\nYT title: {}\n\t->Do you wish to preview it? [y/n] > '.format(video['title'], video['link']))
+                    ans = ans.lower()
 
-            if ans == 'y':
-                subprocess.Popen([player, video['link'], '>', '/dev/null'])
+                if ans == 'y':
+                    subprocess.Popen([player, video['link'], '>', '/dev/null'])
+            else:
+                print("\nYT title: {}".format(video['title']))
+
             ans = ''
             while ans != 'y' and ans != 'n':
                 ans = input('\t -> Is it the correct video? [y/n] > ')
@@ -61,13 +67,18 @@ for slink in spotify_list:
             if ans == 'y':
                 youtube_links.append(video['link'])
                 break
-            
+        errors.append('{} ({}) not found in {}'.format(song_name, artist, video_base_url+query))           
     else:
         print("There was an error trying to get artist and song name from link ({}): {}".format(slink, ex))
 
+error_file = open('error.log', 'w')
+for error in errors:
+    error_file.write(error)
+error_file.close()
 
 youtube_file = open('youtube_links.txt', 'w')
 for link in youtube_links:
 	youtube_file.write(link+'\n')
 youtube_file.close()
+
 print("\nDone")
